@@ -24,10 +24,11 @@ def create_mnist_model():
 
     # the output of our simple model
     y = tf.nn.relu(tf.matmul(x, W) + b)
-    return y
+
+    return x, y
 
 # Our model output (logits)
-y = create_mnist_model()
+x, y = create_mnist_model()
 
 # the placeholder to contain the correct answers
 y_ = tf.placeholder(tf.float32, [None, 10])
@@ -35,15 +36,16 @@ y_ = tf.placeholder(tf.float32, [None, 10])
 # our scoring function
 cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_)
 
+# We'll use this to make predictions with our model
+correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
 # To train the model, we use gradient descent, with a learning step of 0.5
 # What this does is tells Tensorflow to use Gradient Descent, with a learning
 # rate of 0.001, to find the weights that minimize the cross_entropy of our model
 learning_rate = 0.001
 train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy)
 
-# We'll use this to make predictions with our model
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
@@ -70,17 +72,4 @@ for step in range(MAX_STEPS):
 # variables in the graph. Each variable is saved under the name that was passed
 # when the variable was created.
 saver = tf.train.Saver()
-
-tf.reset_default_graph()
-
-y = create_mnist_model()
-
-print("model accuracy: ")
-print(sess.run(accuracy, feed_dict={x: mnist.test.images,
-                                    y_: mnist.test.labels}))
-
-saver.restore(sess, "model.ckpt")
-
-print("model accuracy: ")
-print(sess.run(accuracy, feed_dict={x: mnist.test.images,
-                                    y_: mnist.test.labels}))
+save_path = saver.save(sess, "model.ckpt")
