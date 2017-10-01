@@ -5,7 +5,8 @@ __pycache__/
 MNIST_data/
 # C extensions
 *.so
-
+checkpoint/
+model.ckpt*
 # Distribution / packaging
 .Python
 env/
