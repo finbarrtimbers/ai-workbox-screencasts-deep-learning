@@ -33,29 +33,22 @@ x, y = create_mnist_model()
 # the placeholder to contain the correct answers
 y_ = tf.placeholder(tf.float32, [None, 10])
 
-# our scoring function
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_)
-
 # We'll use this to make predictions with our model
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-# To train the model, we use gradient descent, with a learning step of 0.5
-# What this does is tells Tensorflow to use Gradient Descent, with a learning
-# rate of 0.001, to find the weights that minimize the cross_entropy of our model
-learning_rate = 0.001
-train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy)
-
-
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
-print("model accuracy: ")
+print("Model accuracy after random initialization: ")
 print(sess.run(accuracy, feed_dict={x: mnist.test.images,
                                     y_: mnist.test.labels}))
 
+print("Restoring model...")
+
+saver = tf.train.Saver()
 saver.restore(sess, "model.ckpt")
 
-print("model accuracy: ")
+print("Model accuracy after restoration: ")
 print(sess.run(accuracy, feed_dict={x: mnist.test.images,
                                     y_: mnist.test.labels}))

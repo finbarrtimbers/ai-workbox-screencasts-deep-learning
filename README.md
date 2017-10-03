@@ -17,3 +17,8 @@ All of the code should run with `python script.py`.
 - How to save a simple network to disk
 - How to load a simple network from disk
 - How to visualize training results of a network
+
+## N.B.
+
+Set `os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'` to get rid of the annoying
+Tensorflow warnings.
