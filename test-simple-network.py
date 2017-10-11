@@ -36,6 +36,10 @@ cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_)
 learning_rate = 0.001
 train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy)
 
+# We'll use this to make predictions with our model
+correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
@@ -49,3 +53,13 @@ for step in range(MAX_STEPS):
 
     # we then run those images through our model
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+
+    # we want to see how good our model is
+    if step % 10 == 0:
+        print("model accuracy: ")
+        print(sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                            y_: mnist.test.labels}))
+
+print("final model accuracy: ")
+print(sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                    y_: mnist.test.labels}))

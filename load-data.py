@@ -1,24 +1,62 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-# We load the MNIST dataset using a helper function; in future lessons we'll
-# cover how to load other datasets
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+flags = tf.app.flags
+flags.DEFINE_string('data_dir', 'training',
+                    'Directory where data to run model is found')
+flags.DEFINE_string('checkpoint', None,
+                    'If it exists, loads model from checkpoint')
+flags.DEFINE_boolean('train', False, 'If True trains model for 100 steps')
+FLAGS = flags.FLAGS
 
-# How do we load other datasets?
-# We have a copy of MNIST that we downloaded from
-# - http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
-# - http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
-# - http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
-# - http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
-# Download these files and save them to data/MNIST
-filename_queue = tf.train.string_input_producer(['/Users/HANEL/Desktop/tf.png'])
-reader = tf.WholeFileReader()
-key, value = reader.read(filename_queue)
+print(FLAGS.data_dir)
+print(FLAGS.train)
+print(FLAGS.checkpoint)
+quit()
 
-# use png or jpg decoder based on your files.
-mnist = tf.image.decode_png(value)
+# https://gist.github.com/eerwitt/518b0c9564e500b4b50f
+# Download the data from here, unzip into two folders" training, and test:
+#
+# https://www.kaggle.com/scolianni/mnistasjpg/data
+#
+train_filename_queue = tf.train.string_input_producer(
+    tf.train.match_filenames_once("data/trainingSample/*/*.jpg")
+)
+test_filename_queue = tf.train.string_input_producer(
+    tf.train.match_filenames_once("data/testSample/*.jpg")
+)
 
+# Read an entire image file which is required since they're JPEGs, if the images
+# are too large they could be split in advance to smaller files or use the Fixed
+# reader to split up the file.
+train_image_reader = tf.WholeFileReader()
+test_image_reader = tf.WholeFileReader()
+
+# Read a whole file from the queue, the first returned value in the tuple is the
+# filename which we are ignoring.
+_, train_image_file = train_image_reader.read(train_filename_queue)
+_, test_image_file = test_image_reader.read(test_filename_queue)
+
+# Decode the image as a JPEG file, this will turn it into a Tensor which we can
+# then use in training.
+train_image = tf.image.decode_jpeg(train_image_file)
+train_image = tf.image.decode_jpeg(test_image_file)
+
+# Generate batches
+num_preprocess_threads = 1
+min_queue_examples = 256
+train_images = tf.train.shuffle_batch(
+    [train_image],
+    batch_size=32,
+    num_threads=1
+    capacity=min_queue_examples + 3 * batch_size,
+    min_after_dequeue=min_queue_examples)
+test_images = tf.test.shuffle_batch(
+    [test_image],
+    batch_size=32,
+    num_threads=1
+    capacity=min_queue_examples + 3 * batch_size,
+    min_after_dequeue=min_queue_examples)
 
 # create tf variables and initialize them
 # x is going to be our data, which are 28 x 28 pixel images. We represent them
@@ -58,22 +96,26 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
+if FLAGS.checkpoint:
+
+
 # We run our training for 1000 steps
-MAX_STEPS = 50
-for step in range(MAX_STEPS):
-    print(f"training step: {step}/{MAX_STEPS}")
+if not FLAGS.test:
+    MAX_STEPS = 50
+    for step in range(MAX_STEPS):
+        print(f"training step: {step}/{MAX_STEPS}")
 
-    # at each step, we get a batch of 100 random images frmo our training set
-    batch_xs, batch_ys = mnist.train.next_batch(100)
+        # at each step, we get a batch of 100 random images frmo our training set
+        batch_xs, batch_ys = mnist.train.next_batch(100)
 
-    # we then run those images through our model
-    sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+        # we then run those images through our model
+        sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
-    # we want to see how good our model is
-    if step % 10 == 0:
-        print("model accuracy: ")
-        print(sess.run(accuracy, feed_dict={x: mnist.test.images,
-                                            y_: mnist.test.labels}))
+        # we want to see how good our model is
+        if step % 10 == 0:
+            print("model accuracy: ")
+            print(sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                                y_: mnist.test.labels}))
 print("final model accuracy: ")
 print(sess.run(accuracy, feed_dict={x: mnist.test.images,
                                     y_: mnist.test.labels}))
