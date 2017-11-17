@@ -37,6 +37,20 @@ b3 = tf.get_variable("bias_3", [10],
 
 y = tf.nn.relu(tf.matmul(h2, W3) + b3)
 
+# our first convolutional layer
+#conv1_input = tf.reshape(x, [-1, 28, 28, 1])
+
+#conv1 = tf.layers.conv2d(inputs=conv1_input,
+#                         filters=3,
+#                         kernel_size=[5, 5],
+#                         padding='valid')
+#print(conv1.get_shape())
+#conv1 = tf.reshape(conv1, [-1, 1728])
+#W1 = tf.get_variable("weights", shape=[1728, 10],
+#                    initializer=tf.glorot_uniform_initializer())
+#y = tf.nn.relu(tf.matmul(conv1, W1) + b1)
+
+
 # the placeholder to contain the correct answers
 y_ = tf.placeholder(tf.float32, [None, 10])
 
